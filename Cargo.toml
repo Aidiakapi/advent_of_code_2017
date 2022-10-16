@@ -4,8 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+ahash = "0.8"
 framework = { path = "./framework", package = "advent_of_code_framework" }
 itertools = "0.10"
+num = "0.4"
+strum = "0.24"
+strum_macros = "0.24"
 
 [workspace]
 members = [
