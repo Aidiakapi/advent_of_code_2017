@@ -6,4 +6,7 @@ extern crate test;
 
 mod prelude;
 
-framework::main!(day01);
+framework::main!(
+    day01,
+    day02,
+);

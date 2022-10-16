@@ -10,4 +10,6 @@ pub enum Error {
     ParseError(#[from] crate::parsers::ParseError),
     #[error("not yet implemented")]
     NotImplemented,
+    #[error("invalid input")]
+    InvalidInput(&'static str),
 }
