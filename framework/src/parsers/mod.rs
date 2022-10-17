@@ -21,17 +21,7 @@ pub trait Execute<'s, T> {
 
 impl<'s, P: Parser<Output<'s> = T>, T> Execute<'s, T> for P {
     fn execute(&self, input: &'s [u8]) -> crate::result::Result<T> {
-        self.parse(input).finish()
-    }
-}
-
-pub trait Finish<T> {
-    fn finish(self) -> crate::result::Result<T>;
-}
-
-impl<T> Finish<T> for ParseResult<'_, T> {
-    fn finish(self) -> crate::result::Result<T> {
-        Err(match self {
+        Err(match self.parse(input) {
             Ok((x, [] | [b'\n'])) => return Ok(x),
             Ok((_, remainder)) => {
                 ParseError::InputNotConsumed(String::from_utf8_lossy(remainder).into_owned())

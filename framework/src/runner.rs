@@ -1,15 +1,14 @@
-use std::io::Write;
-
-use crate::{inputs::Inputs, result::Result};
+use crate::{inputs::Inputs, prelude::ColoredOutput, result::Result};
 use colored::Colorize;
+use std::io::Write;
 
 pub fn run(days: &[Box<dyn AnyDayMetadata>]) -> Result<()> {
     println!(
-        "{} {} {} {}",
-        "Advent".underline().bright_red(),
-        "of".underline().bright_yellow().bold(),
-        "Code".underline().bright_green(),
-        "2017".underline().bright_blue().bold()
+        "\n🎄 {} {} {} {} 🎄\n",
+        "Advent".bright_red().bold(),
+        "of".bright_green(),
+        "Code".blue().bold(),
+        "2017".white().bold()
     );
 
     let included_days: Vec<u32> = std::env::args()
@@ -23,6 +22,7 @@ pub fn run(days: &[Box<dyn AnyDayMetadata>]) -> Result<()> {
         }
         day.execute(&mut inputs)?;
     }
+    println!();
     Ok(())
 }
 
@@ -44,7 +44,7 @@ pub struct DayMetadata<T> {
 
 pub struct DayPart<T> {
     pub name: &'static str,
-    pub function: Box<dyn Fn(&T) -> Result<String>>,
+    pub function: Box<dyn Fn(&T) -> Result<ColoredOutput>>,
 }
 
 impl<T> AnyDayMetadata for DayMetadata<T> {
@@ -52,24 +52,29 @@ impl<T> AnyDayMetadata for DayMetadata<T> {
         self.number
     }
     fn execute(&self, inputs: &mut Inputs) -> Result<()> {
-        println!(
+        const OUTPUT_WIDTH: usize = 40;
+        print!(
             "{} {}",
-            "Day".bright_green(),
-            self.number.to_string().blue().bold()
+            "Day".bright_blue(),
+            format!("{:>2}", self.number).bright_red().bold()
         );
 
         let input = inputs.get(self.number)?;
         let parsed = (self.parse_fn)(&input)?;
         for part in &self.parts {
-            print!("{}", part.name.bright_yellow().bold());
+            let remaining_space = OUTPUT_WIDTH.checked_sub(part.name.len() + 1).unwrap_or(0);
+            print!(" :: {} ", part.name.bright_yellow());
             _ = std::io::stdout().flush();
             let result = (part.function)(&parsed)?;
-            if result.contains(|p| p == '\n') {
-                println!("\n{result}");
-            } else {
-                println!(" {result}");
+            let str_len = result.value().len() - result.control_count();
+            let remaining_space = remaining_space.checked_sub(str_len).unwrap_or(0);
+            for _ in 0..remaining_space {
+                print!(" ");
             }
+            print!("{}", result.value());
+            _ = std::io::stdout().flush();
         }
+        println!();
 
         Ok(())
     }

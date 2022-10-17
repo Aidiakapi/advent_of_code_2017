@@ -2,13 +2,20 @@
 #![feature(maybe_uninit_array_assume_init)]
 #![feature(maybe_uninit_uninit_array)]
 #![feature(negative_impls)]
+#![feature(stmt_expr_attributes)]
+#![feature(trait_alias)]
 
 pub mod error;
 pub mod inputs;
+pub mod offsets;
+pub mod outputs;
 pub mod parsers;
 pub mod prelude;
 pub mod result;
 pub mod runner;
+pub mod vec2;
+
+pub use paste::paste;
 
 #[macro_export]
 macro_rules! main {
@@ -45,7 +52,7 @@ pub fn day_metadata() -> impl $crate::runner::SpecificDayMetadata {
                 name: stringify!($part_fn),
                 function: Box::new(|input| {
                     $crate::result::IntoResult::into_result($part_fn(input))
-                        .map(|result| std::string::ToString::to_string(&result))
+                        .map(|result| result.into())
                 }),
             },
         )+],
@@ -53,24 +60,19 @@ pub fn day_metadata() -> impl $crate::runner::SpecificDayMetadata {
 }
     };
     (@bench, $day_nr:literal, $parse_fn:ident => $($part_fn:ident),+) => {
-#[cfg(test)]
-pub mod benchmarks {
-    use ::test::{black_box, Bencher};
-    #[bench]
-    pub fn $parse_fn(b: &mut Bencher) {
+$crate::paste! {
+    #[cfg(feature = "criterion")]
+    #[criterion_macro::criterion]
+    pub fn benchmarks(c: &mut criterion::Criterion) {
+        use criterion::{black_box, Criterion};
         let mut inputs = $crate::inputs::Inputs::new();
         let input = inputs.get($day_nr).expect("could not get input");
-        b.iter(|| super::$parse_fn(&input));
+        let parsed = $parse_fn(&input).expect("could not parse input");
+        c.bench_function(stringify!([<day $day_nr _ $parse_fn>]), |b| b.iter(|| $parse_fn(&input)));
+        $(
+            c.bench_function(stringify!([<day $day_nr _ $part_fn>]), |b| b.iter(|| $part_fn(&parsed)));
+        )*
     }
-    $(
-        #[bench]
-        pub fn $part_fn(b: &mut Bencher) {
-            let mut inputs = $crate::inputs::Inputs::new();
-            let input = inputs.get($day_nr).expect("could not get input");
-            let parsed = super::$parse_fn(&input).expect("could not parse input");
-            b.iter(|| super::$part_fn(&parsed));
-        }
-    )*
 }
     };
 }
@@ -79,6 +81,7 @@ pub mod benchmarks {
 macro_rules! tests {
     ($($x:tt)*) => {
         #[cfg(test)]
+        #[cfg(not(feature = "criterion"))]
         mod tests {
             use super::*;
             use $crate::test_pt;

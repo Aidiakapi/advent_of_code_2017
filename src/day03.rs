@@ -1,4 +1,4 @@
-framework::day!(3, false, parse => pt1, pt2);
+framework::day!(3, true, parse => pt1, pt2);
 
 fn calculate_position(value: u32) -> Result<Vec2i32> {
     let mut value = match value {
@@ -38,7 +38,10 @@ fn pt2(&input: &u32) -> Result<u32> {
     loop {
         i += 1;
         let pos = calculate_position(i)?;
-        let value: u32 = pos.neighbors().filter_map(|p| cells.get(&p).cloned()).sum();
+        let value: u32 = pos
+            .neighbors(&Offset::ALL)
+            .filter_map(|p| cells.get(&p).cloned())
+            .sum();
         if value > input {
             return Ok(value);
         }

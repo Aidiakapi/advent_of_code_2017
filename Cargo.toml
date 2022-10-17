@@ -7,9 +7,13 @@ edition = "2021"
 ahash = "0.8"
 framework = { path = "./framework", package = "advent_of_code_framework" }
 itertools = "0.10"
-num = "0.4"
-strum = "0.24"
-strum_macros = "0.24"
+
+[dev-dependencies]
+criterion = "0.4"
+criterion-macro = "0.4"
+
+[features]
+criterion = []
 
 [workspace]
 members = [

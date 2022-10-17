@@ -1,12 +1,9 @@
 #![feature(byte_slice_trim_ascii)]
 #![feature(never_type)]
-#![feature(stmt_expr_attributes)]
-#![feature(test)]
-
-extern crate test;
+#![feature(custom_test_frameworks)]
+#![cfg_attr(feature = "criterion", test_runner(criterion::runner))]
 
 mod prelude;
-mod vec2;
 
 framework::main!(
     day01,
