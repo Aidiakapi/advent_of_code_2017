@@ -1,4 +1,4 @@
-framework::day!(3, true, parse => pt1, pt2);
+framework::day!(03, true, parse => pt1, pt2);
 
 fn calculate_position(value: u32) -> Result<Vec2i32> {
     let mut value = match value {
