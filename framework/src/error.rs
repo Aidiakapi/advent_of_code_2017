@@ -12,4 +12,6 @@ pub enum Error {
     NotImplemented,
     #[error("invalid input")]
     InvalidInput(&'static str),
+    #[error("no solution")]
+    NoSolution,
 }

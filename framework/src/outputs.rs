@@ -1,5 +1,9 @@
+use crate::astr::*;
 use colored::Colorize;
-use std::fmt::{self, Write};
+use std::{
+    fmt::{self, Write},
+    ops::Deref,
+};
 
 #[derive(Debug)]
 pub struct ColoredOutput {
@@ -22,10 +26,12 @@ impl fmt::Display for ColoredOutput {
     }
 }
 
-auto trait DisplayButNotOutput {}
-impl !DisplayButNotOutput for ColoredOutput {}
+auto trait NotIntoColorOutput {}
+impl !NotIntoColorOutput for ColoredOutput {}
+impl !NotIntoColorOutput for AString {}
+impl<'s> !NotIntoColorOutput for &'s AStr {}
 
-impl<T: fmt::Display + DisplayButNotOutput> From<T> for ColoredOutput {
+impl<T: fmt::Display + NotIntoColorOutput> From<T> for ColoredOutput {
     fn from(value: T) -> Self {
         let value = value.to_string();
         let before_style_len = value.len();
@@ -38,12 +44,24 @@ impl<T: fmt::Display + DisplayButNotOutput> From<T> for ColoredOutput {
     }
 }
 
+impl From<AString> for ColoredOutput {
+    fn from(s: AString) -> Self {
+        s.as_slice().into()
+    }
+}
+
+impl<'s> From<&'s AStr> for ColoredOutput {
+    fn from(s: &'s AStr) -> Self {
+        String::from_utf8_lossy(s).deref().into()
+    }
+}
+
 macro_rules! impl_binary_op_output {
     ($symbol:literal, $struct_name:ident, $trait_name:ident, $trait_fn:ident, $identity_trait:ident, $identity_fn:ident) => {
         #[derive(Debug, Clone, Copy, PartialEq, Eq)]
         pub struct $struct_name<T>(pub T);
 
-        impl<T> !DisplayButNotOutput for $struct_name<T> {}
+        impl<T> !NotIntoColorOutput for $struct_name<T> {}
         impl<T, I> From<$struct_name<T>> for ColoredOutput
         where
             T: IntoIterator<Item = I>,

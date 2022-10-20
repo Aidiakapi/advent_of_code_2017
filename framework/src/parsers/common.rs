@@ -1,5 +1,6 @@
 pub use super::*;
 
+#[derive(Debug, Clone, Copy)]
 pub struct Digit;
 pub const fn digit() -> Digit {
     Digit
@@ -15,6 +16,24 @@ impl Parser for Digit {
         }
     }
 }
+
+pub macro pattern($p:pat) {{
+    #[derive(Debug, Clone, Copy)]
+    struct PatternParser;
+    impl $crate::parsers::Parser for PatternParser {
+        type Output<'s> = u8;
+
+        fn parse<'s>(&self, input: &'s [u8]) -> $crate::parsers::ParseResult<'s, Self::Output<'s>> {
+            match input.first().cloned() {
+                None => Err((ParseError::EmptyInput, input)),
+                Some(v @ $p) => Ok((v, &input[1..])),
+                Some(_) => Err((ParseError::UnexpectedChar, input)),
+            }
+        }
+    }
+
+    PatternParser
+}}
 
 #[repr(transparent)]
 #[derive(Debug, Clone, Copy)]

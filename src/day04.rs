@@ -33,13 +33,7 @@ fn pt2(input: &[Vec<Vec<u8>>]) -> usize {
 
 fn parse(input: &[u8]) -> Result<Vec<Vec<Vec<u8>>>> {
     use parsers::*;
-    let letter = any().map_res(|l| {
-        if let b'a'..=b'z' = l {
-            Ok(l)
-        } else {
-            Err(ParseError::UnexpectedChar)
-        }
-    });
+    let letter = pattern!(b'a'..=b'z');
     let word = letter.repeat_into();
     word.sep_by(token(b' ')).sep_by(token(b'\n')).execute(input)
 }
