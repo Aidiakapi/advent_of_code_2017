@@ -5,10 +5,10 @@ pub struct Digit;
 pub const fn digit() -> Digit {
     Digit
 }
-impl Parser for Digit {
-    type Output<'s> = u8;
+impl<'s> Parser<'s> for Digit {
+    type Output = u8;
 
-    fn parse<'s>(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output<'s>> {
+    fn parse(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output> {
         match input.first().cloned() {
             None => Err((ParseError::EmptyInput, input)),
             Some(d @ b'0'..=b'9') => Ok((d - b'0', &input[1..])),
@@ -20,10 +20,10 @@ impl Parser for Digit {
 pub macro pattern($p:pat) {{
     #[derive(Debug, Clone, Copy)]
     struct PatternParser;
-    impl $crate::parsers::Parser for PatternParser {
-        type Output<'s> = u8;
+    impl<'s> $crate::parsers::Parser<'s> for PatternParser {
+        type Output = u8;
 
-        fn parse<'s>(&self, input: &'s [u8]) -> $crate::parsers::ParseResult<'s, Self::Output<'s>> {
+        fn parse(&self, input: &'s [u8]) -> $crate::parsers::ParseResult<'s, Self::Output> {
             match input.first().cloned() {
                 None => Err((ParseError::EmptyInput, input)),
                 Some(v @ $p) => Ok((v, &input[1..])),
@@ -41,9 +41,9 @@ pub struct Token<T> {
     value: T,
 }
 
-impl Parser for Token<u8> {
-    type Output<'s> = ();
-    fn parse<'s>(&self, input: &'s [u8]) -> ParseResult<'s, ()> {
+impl<'s> Parser<'s> for Token<u8> {
+    type Output = ();
+    fn parse(&self, input: &'s [u8]) -> ParseResult<'s, ()> {
         if let Some(&c) = input.first() {
             if c == self.value {
                 return Ok(((), &input[1..]));
@@ -53,9 +53,9 @@ impl Parser for Token<u8> {
     }
 }
 
-impl<T: Clone> Parser for Token<(u8, T)> {
-    type Output<'s> = T;
-    fn parse<'s>(&self, input: &'s [u8]) -> ParseResult<'s, T> {
+impl<'s, T: 's + Clone> Parser<'s> for Token<(u8, T)> {
+    type Output = T;
+    fn parse(&self, input: &'s [u8]) -> ParseResult<'s, T> {
         if let Some(&c) = input.first() {
             if c == self.value.0 {
                 return Ok((self.value.1.clone(), &input[1..]));
@@ -65,9 +65,9 @@ impl<T: Clone> Parser for Token<(u8, T)> {
     }
 }
 
-impl<'t> Parser for Token<&'t [u8]> {
-    type Output<'s> = ();
-    fn parse<'s>(&self, input: &'s [u8]) -> ParseResult<'s, ()> {
+impl<'s, 't: 's> Parser<'s> for Token<&'t [u8]> {
+    type Output = ();
+    fn parse(&self, input: &'s [u8]) -> ParseResult<'s, ()> {
         if input.starts_with(self.value) {
             Ok(((), &input[self.value.len()..]))
         } else {
@@ -76,9 +76,9 @@ impl<'t> Parser for Token<&'t [u8]> {
     }
 }
 
-impl<'t, T: Clone> Parser for Token<(&'t [u8], T)> {
-    type Output<'s> = T;
-    fn parse<'s>(&self, input: &'s [u8]) -> ParseResult<'s, T> {
+impl<'s, 't: 's, T: 's + Clone> Parser<'s> for Token<(&'t [u8], T)> {
+    type Output = T;
+    fn parse(&self, input: &'s [u8]) -> ParseResult<'s, T> {
         if input.starts_with(self.value.0) {
             Ok((self.value.1.clone(), &input[self.value.0.len()..]))
         } else {
@@ -87,9 +87,9 @@ impl<'t, T: Clone> Parser for Token<(&'t [u8], T)> {
     }
 }
 
-impl<'t, const N: usize> Parser for Token<&'t [u8; N]> {
-    type Output<'s> = ();
-    fn parse<'s>(&self, input: &'s [u8]) -> ParseResult<'s, ()> {
+impl<'s, 't: 's, const N: usize> Parser<'s> for Token<&'t [u8; N]> {
+    type Output = ();
+    fn parse(&self, input: &'s [u8]) -> ParseResult<'s, ()> {
         if input.starts_with(self.value) {
             Ok(((), &input[self.value.len()..]))
         } else {
@@ -98,9 +98,9 @@ impl<'t, const N: usize> Parser for Token<&'t [u8; N]> {
     }
 }
 
-impl<'t, T: Clone, const N: usize> Parser for Token<(&'t [u8; N], T)> {
-    type Output<'s> = T;
-    fn parse<'s>(&self, input: &'s [u8]) -> ParseResult<'s, T> {
+impl<'s, 't: 's, T: 's + Clone, const N: usize> Parser<'s> for Token<(&'t [u8; N], T)> {
+    type Output = T;
+    fn parse(&self, input: &'s [u8]) -> ParseResult<'s, T> {
         if input.starts_with(self.value.0) {
             Ok((self.value.1.clone(), &input[self.value.0.len()..]))
         } else {
@@ -115,10 +115,10 @@ pub fn token<T>(token: T) -> Token<T> {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Any;
-impl Parser for Any {
-    type Output<'s> = u8;
+impl<'s> Parser<'s> for Any {
+    type Output = u8;
 
-    fn parse<'s>(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output<'s>> {
+    fn parse(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output> {
         match input.first() {
             Some(&c) => Ok((c, &input[1..])),
             None => Err((ParseError::EmptyInput, input)),

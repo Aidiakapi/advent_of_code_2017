@@ -5,10 +5,10 @@ use super::*;
 macro_rules! impl_uint_parsing {
     ($kind:tt) => {
         impl $crate::parsers::numbers::IsParsableNumber for $kind {}
-        impl $crate::parsers::Parser for NumberParser<$kind> {
-            type Output<'s> = $kind;
+        impl<'s> $crate::parsers::Parser<'s> for NumberParser<$kind> {
+            type Output = $kind;
 
-            fn parse<'s>(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output<'s>> {
+            fn parse(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output> {
                 let first_char = *input.first().ok_or((ParseError::EmptyInput, input))?;
                 if !matches!(first_char, b'0'..=b'9') {
                     return Err((ParseError::ExpectedDigit, input));
@@ -40,10 +40,10 @@ macro_rules! impl_sint_parsing {
         /// Parses an integer. Allows an optional + or - at the start to
         /// indicate a sign.
         impl $crate::parsers::numbers::IsParsableNumber for $kind {}
-        impl $crate::parsers::Parser for NumberParser<$kind> {
-            type Output<'s> = $kind;
+        impl<'s> $crate::parsers::Parser<'s> for NumberParser<$kind> {
+            type Output = $kind;
 
-            fn parse<'s>(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output<'s>> {
+            fn parse(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output> {
                 let (is_negative, remainder) = match input.first() {
                     Some(&b'-') => (true, &input[1..]),
                     Some(&b'+') => (false, &input[1..]),

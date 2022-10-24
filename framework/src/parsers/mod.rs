@@ -10,16 +10,16 @@ pub use error::{ParseError, ParseResult};
 pub use multi::{take_while, ParserMultiExt};
 pub use numbers::number;
 
-pub trait Parser {
-    type Output<'s>;
-    fn parse<'s>(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output<'s>>;
+pub trait Parser<'s> {
+    type Output: 's;
+    fn parse(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output>;
 }
 
 pub trait Execute<'s, T> {
     fn execute(&self, input: &'s [u8]) -> crate::result::Result<T>;
 }
 
-impl<'s, P: Parser<Output<'s> = T>, T> Execute<'s, T> for P {
+impl<'s, P: Parser<'s, Output = T>, T> Execute<'s, T> for P {
     fn execute(&self, input: &'s [u8]) -> crate::result::Result<T> {
         Err(match self.parse(input) {
             Ok((x, [] | [b'\n'])) => return Ok(x),

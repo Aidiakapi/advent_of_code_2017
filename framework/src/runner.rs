@@ -1,71 +1,73 @@
-use crate::{inputs::Inputs, prelude::ColoredOutput, result::Result};
-use colored::Colorize;
-use std::io::Write;
+pub use crate::{
+    inputs::Inputs,
+    outputs::ColoredOutput,
+    result::{IntoResult, Result},
+};
+pub use colored::Colorize;
+pub use std::io::Write;
 
-pub fn run(days: &[Box<dyn AnyDayMetadata>]) -> Result<()> {
-    println!(
-        "\n🎄 {} {} {} {} 🎄\n",
-        "Advent".bright_red().bold(),
-        "of".bright_green(),
-        "Code".blue().bold(),
-        "2017".white().bold()
-    );
+#[macro_export]
+macro_rules! main {
+    ($($day:ident),*$(,)?) => {
+        $(mod $day;)*
 
-    let included_days: Vec<u32> = std::env::args()
-        .filter_map(|v| v.parse::<u32>().ok())
-        .collect();
+        fn main() -> $crate::runner::Result<()> {
+            use $crate::runner::*;
+            println!(
+                "\n🎄 {} {} {} {} 🎄\n",
+                "Advent".bright_red().bold(),
+                "of".bright_green(),
+                "Code".blue().bold(),
+                "2017".white().bold()
+            );
 
-    let mut inputs = Inputs::new();
-    for day in days {
-        if !included_days.is_empty() && !included_days.contains(&day.number()) {
-            continue;
+            let included_days: Vec<u32> = std::env::args()
+                .filter_map(|v| v.parse::<u32>().ok())
+                .collect();
+
+            let mut inputs = Inputs::new();
+            $({
+                if included_days.is_empty() || included_days.contains(&$day::DayMetadata::number()) {
+                    $day::DayMetadata::execute(&mut inputs)?;
+                }
+            })*
+            println!();
+            Ok(())
         }
-        day.execute(&mut inputs)?;
-    }
-    println!();
-    Ok(())
+    };
 }
 
-pub trait AnyDayMetadata {
-    fn number(&self) -> u32;
-    fn execute(&self, inputs: &mut Inputs) -> Result<()>;
-}
-
-pub trait SpecificDayMetadata: AnyDayMetadata {
-    type Parsed;
-    fn parse(&self, input: &[u8]) -> Result<Self::Parsed>;
-}
-
-pub struct DayMetadata<T> {
-    pub number: u32,
-    pub parse_fn: Box<dyn Fn(&[u8]) -> Result<T>>,
-    pub parts: Vec<DayPart<T>>,
-}
-
-pub struct DayPart<T> {
-    pub name: &'static str,
-    pub function: Box<dyn Fn(&T) -> Result<ColoredOutput>>,
-}
-
-impl<T> AnyDayMetadata for DayMetadata<T> {
-    fn number(&self) -> u32 {
-        self.number
-    }
-    fn execute(&self, inputs: &mut Inputs) -> Result<()> {
+#[macro_export]
+macro_rules! day {
+    ($day_nr:literal, true, $parse_fn:ident => $($part_fn:ident),+$(,)?) => {
+        $crate::day!(@primary, $day_nr, $parse_fn => $($part_fn),+);
+        $crate::day!(@bench, $day_nr, $parse_fn => $($part_fn),+);
+    };
+    ($day_nr:literal, false, $parse_fn:ident => $($part_fn:ident),+$(,)?) => {
+        $crate::day!(@primary, $day_nr, $parse_fn => $($part_fn),+);
+    };
+    (@primary, $day_nr:literal, $parse_fn:ident => $($part_fn:ident),+) => {
+use super::prelude::*;
+pub struct DayMetadata;
+impl DayMetadata {
+    pub fn number() -> u32 { $day_nr }
+    pub fn execute(inputs: &mut $crate::runner::Inputs) -> $crate::runner::Result<()> {
+        use $crate::runner::*;
         const OUTPUT_WIDTH: usize = 40;
         print!(
             "{} {}",
             "Day".bright_blue(),
-            format!("{:>2}", self.number).bright_red().bold()
+            format!("{:>2}", $day_nr).bright_red().bold()
         );
 
-        let input = inputs.get(self.number)?;
-        let parsed = (self.parse_fn)(&input)?;
-        for part in &self.parts {
-            let remaining_space = OUTPUT_WIDTH.checked_sub(part.name.len() + 1).unwrap_or(0);
-            print!(" :: {} ", part.name.bright_yellow());
+        let input = inputs.get($day_nr)?;
+        let parsed = $parse_fn(&input)?;
+        $({
+            let part_name = stringify!($part_fn);
+            let remaining_space = OUTPUT_WIDTH.checked_sub(part_name.len() + 1).unwrap_or(0);
+            print!(" :: {} ", part_name.bright_yellow());
             _ = std::io::stdout().flush();
-            let result = (part.function)(&parsed)?;
+            let result: ColoredOutput = IntoResult::into_result($part_fn(&parsed))?.into();
             let str_len = result.value().len() - result.control_count();
             let remaining_space = remaining_space.checked_sub(str_len).unwrap_or(0);
             for _ in 0..remaining_space {
@@ -73,17 +75,65 @@ impl<T> AnyDayMetadata for DayMetadata<T> {
             }
             print!("{}", result.value());
             _ = std::io::stdout().flush();
-        }
+        })+
         println!();
 
         Ok(())
     }
 }
+    };
+    (@bench, $day_nr:literal, $parse_fn:ident => $($part_fn:ident),+) => {
+$crate::paste! {
+    #[cfg(feature = "criterion")]
+    #[criterion_macro::criterion]
+    pub fn benchmarks(c: &mut criterion::Criterion) {
+        use criterion::{black_box, Criterion};
+        let mut inputs = $crate::inputs::Inputs::new();
+        let input = inputs.get($day_nr).expect("could not get input");
+        let parsed = $parse_fn(&input).expect("could not parse input");
+        c.bench_function(stringify!([<day $day_nr _ $parse_fn>]), |b| b.iter(|| $parse_fn(&input)));
+        $(
+            c.bench_function(stringify!([<day $day_nr _ $part_fn>]), |b| b.iter(|| $part_fn(&parsed)));
+        )*
+    }
+}
+    };
+}
 
-impl<T> SpecificDayMetadata for DayMetadata<T> {
-    type Parsed = T;
+#[macro_export]
+macro_rules! tests {
+    ($($x:tt)*) => {
+        #[cfg(test)]
+        #[cfg(not(feature = "criterion"))]
+        mod tests {
+            use super::*;
+            use $crate::test_pt;
 
-    fn parse(&self, input: &[u8]) -> Result<Self::Parsed> {
-        (self.parse_fn)(input)
+            $($x)*
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! test_pt {
+    ($parse_fn:ident, $pt_fn:ident, $($input:expr => $output:expr),+$(,)?) => {
+#[test]
+fn $pt_fn() {
+    use $crate::runner::*;
+    $(
+        let parsed = match IntoResult::into_result(super::$parse_fn($input)) {
+            Ok(x) => x,
+            Err(e) => panic!("parsing failed: {e}\ninput: {:?}", String::from_utf8_lossy($input).into_owned()),
+        };
+        let result = match IntoResult::into_result(super::$pt_fn(&parsed)) {
+            Ok(x) => x,
+            Err(e) => panic!("execution failed: {e}\ninput: {:?}", String::from_utf8_lossy($input).into_owned()),
+        };
+        let output = $output;
+        if result != output {
+            panic!("incorrect output, expected: {:?}, got: {:?}\ninput: {:?}", output, result, String::from_utf8_lossy($input).into_owned());
+        }
+    )+
+}
     }
 }

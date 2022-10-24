@@ -6,12 +6,12 @@ use std::{
 
 use super::*;
 
-pub trait ParserMultiExt: Sized + Parser {
+pub trait ParserMultiExt<'s>: Sized + Parser<'s> {
     /// Repeatedly applies the parser, interspersing applications of `separator`.
     /// Fails if parser cannot be applied at least once.
-    fn sep_by<'s, S, C: Default + Extend<Self::Output<'s>>>(self, separator: S) -> SepBy<Self, S, C>
+    fn sep_by<S, C: Default + Extend<Self::Output>>(self, separator: S) -> SepBy<Self, S, C>
     where
-        S: Parser,
+        S: Parser<'s>,
     {
         SepBy {
             parser: self,
@@ -25,7 +25,7 @@ pub trait ParserMultiExt: Sized + Parser {
     fn fold<A, F>(self, initial: A, func: F) -> Fold<Self, A, F>
     where
         A: Clone,
-        F: Fn(A, Self::Output<'_>) -> A,
+        F: Fn(A, Self::Output) -> A,
     {
         Fold {
             parser: self,
@@ -39,7 +39,7 @@ pub trait ParserMultiExt: Sized + Parser {
     fn fold_mut<A, F>(self, initial: A, func: F) -> FoldMut<Self, A, F>
     where
         A: Clone,
-        F: Fn(&mut A, Self::Output<'_>),
+        F: Fn(&mut A, Self::Output),
     {
         FoldMut {
             parser: self,
@@ -56,7 +56,7 @@ pub trait ParserMultiExt: Sized + Parser {
 
     /// Repeatedly applies the parser, until failure, returning a collection
     /// of all successfully applied values.
-    fn repeat_into<'s, C: Default + Extend<Self::Output<'s>>>(self) -> RepeatInto<Self, C> {
+    fn repeat_into<C: Default + Extend<Self::Output>>(self) -> RepeatInto<Self, C> {
         RepeatInto {
             parser: self,
             _collection: PhantomData,
@@ -68,21 +68,23 @@ pub trait ParserMultiExt: Sized + Parser {
     }
 }
 
-impl<P: Parser> ParserMultiExt for P {}
+impl<'s, P: Parser<'s>> ParserMultiExt<'s> for P {}
 
 #[derive(Debug, Clone, Copy)]
-pub struct TakeWhile<F>(F);
-impl<F> Parser for TakeWhile<F>
+pub struct TakeWhile<C, F>(C, F);
+impl<'s, C, F> Parser<'s> for TakeWhile<C, F>
 where
-    F: Fn(u8) -> bool,
+    C: Clone,
+    F: Fn(&mut C, u8) -> bool,
 {
-    type Output<'s> = &'s [u8];
+    type Output = &'s [u8];
 
-    fn parse<'s>(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output<'s>> {
+    fn parse(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output> {
         let mut index = 0;
+        let mut ctx = self.0.clone();
         loop {
             match input.get(index) {
-                Some(&c) if (self.0)(c) => index += 1,
+                Some(&c) if (self.1)(&mut ctx, c) => index += 1,
                 _ => break,
             }
         }
@@ -93,11 +95,12 @@ where
         }
     }
 }
-pub fn take_while<F>(f: F) -> TakeWhile<F>
+pub fn take_while<C, F>(ctx: C, f: F) -> TakeWhile<C, F>
 where
-    F: Fn(u8) -> bool,
+    C: Clone,
+    F: Fn(&mut C, u8) -> bool,
 {
-    TakeWhile(f)
+    TakeWhile(ctx, f)
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -137,15 +140,15 @@ pub struct Many<P, const N: usize> {
     parser: P,
 }
 
-impl<P, S, C> Parser for SepBy<P, S, C>
+impl<'s, P, S, C> Parser<'s> for SepBy<P, S, C>
 where
-    P: Parser,
-    S: Parser,
-    C: Default + for<'s> Extend<P::Output<'s>>,
+    P: Parser<'s>,
+    S: Parser<'s>,
+    C: 's + Default + Extend<P::Output>,
 {
-    type Output<'s> = C;
+    type Output = C;
 
-    fn parse<'s>(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output<'s>> {
+    fn parse(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output> {
         let (element, mut remainder) = self.parser.parse(input)?;
         let mut elements = C::default();
         elements.extend(Some(element));
@@ -165,15 +168,15 @@ where
     }
 }
 
-impl<P, A, F> Parser for Fold<P, A, F>
+impl<'s, P, A, F> Parser<'s> for Fold<P, A, F>
 where
-    P: Parser,
-    A: Clone,
-    F: Fn(A, P::Output<'_>) -> A,
+    P: Parser<'s>,
+    A: 's + Clone,
+    F: Fn(A, P::Output) -> A,
 {
-    type Output<'s> = A;
+    type Output = A;
 
-    fn parse<'s>(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output<'s>> {
+    fn parse(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output> {
         let mut accumulator = self.initial.clone();
         let mut remainder = input;
         while let Ok((value, new_remainder)) = self.parser.parse(remainder) {
@@ -184,15 +187,15 @@ where
     }
 }
 
-impl<P, A, F> Parser for FoldMut<P, A, F>
+impl<'s, P, A, F> Parser<'s> for FoldMut<P, A, F>
 where
-    P: Parser,
-    A: Clone,
-    F: Fn(&mut A, P::Output<'_>),
+    P: Parser<'s>,
+    A: 's + Clone,
+    F: Fn(&mut A, P::Output),
 {
-    type Output<'s> = A;
+    type Output = A;
 
-    fn parse<'s>(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output<'s>> {
+    fn parse(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output> {
         let mut accumulator = self.initial.clone();
         let mut remainder = input;
         while let Ok((value, new_remainder)) = self.parser.parse(remainder) {
@@ -203,13 +206,13 @@ where
     }
 }
 
-impl<P> Parser for Repeat<P>
+impl<'s, P> Parser<'s> for Repeat<P>
 where
-    P: Parser,
+    P: Parser<'s>,
 {
-    type Output<'s> = P::Output<'s>;
+    type Output = P::Output;
 
-    fn parse<'s>(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output<'s>> {
+    fn parse(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output> {
         let (mut last_value, mut remainder) = self.parser.parse(input)?;
         while let Ok((value, new_remainder)) = self.parser.parse(remainder) {
             last_value = value;
@@ -219,10 +222,10 @@ where
     }
 }
 
-impl<P: Parser, C: Default + for<'s> Extend<P::Output<'s>>> Parser for RepeatInto<P, C> {
-    type Output<'s> = C;
+impl<'s, P: Parser<'s>, C: 's + Default + Extend<P::Output>> Parser<'s> for RepeatInto<P, C> {
+    type Output = C;
 
-    fn parse<'s>(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output<'s>> {
+    fn parse(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output> {
         let mut c = C::default();
 
         let (first_value, mut remainder) = self.parser.parse(input)?;
@@ -235,10 +238,10 @@ impl<P: Parser, C: Default + for<'s> Extend<P::Output<'s>>> Parser for RepeatInt
     }
 }
 
-impl<P: Parser, const N: usize> Parser for Many<P, N> {
-    type Output<'s> = [P::Output<'s>; N];
+impl<'s, P: Parser<'s>, const N: usize> Parser<'s> for Many<P, N> {
+    type Output = [P::Output; N];
 
-    fn parse<'s>(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output<'s>> {
+    fn parse(&self, input: &'s [u8]) -> ParseResult<'s, Self::Output> {
         struct PartiallyInit<T, const N: usize> {
             memory: [MaybeUninit<T>; N],
             count: usize,
@@ -254,7 +257,7 @@ impl<P: Parser, const N: usize> Parser for Many<P, N> {
             }
         }
 
-        let mut partially_init = PartiallyInit::<P::Output<'s>, N> {
+        let mut partially_init = PartiallyInit::<P::Output, N> {
             memory: MaybeUninit::uninit_array(),
             count: 0,
         };
