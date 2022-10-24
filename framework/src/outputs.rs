@@ -33,7 +33,12 @@ impl<'s> !NotIntoColorOutput for &'s AStr {}
 
 impl<T: fmt::Display + NotIntoColorOutput> From<T> for ColoredOutput {
     fn from(value: T) -> Self {
-        let value = value.to_string();
+        value.to_string().into()
+    }
+}
+
+impl From<String> for ColoredOutput {
+    fn from(value: String) -> Self {
         let before_style_len = value.len();
         let value = value.white().bold().to_string();
         let control_count = value.len() - before_style_len;

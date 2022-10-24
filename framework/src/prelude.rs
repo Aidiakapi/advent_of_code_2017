@@ -6,4 +6,5 @@ pub use crate::outputs::*;
 pub use crate::parsers;
 pub use crate::result::Result;
 pub use crate::tests;
+pub use crate::util;
 pub use crate::vec2::*;
