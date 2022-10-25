@@ -1,5 +1,6 @@
 pub use crate::astr::{AStr, AString};
 pub use crate::error::Error;
+pub use crate::graph;
 pub use crate::iter::*;
 pub use crate::offsets::{Neighbor, Neighbors, Offset};
 pub use crate::outputs::*;

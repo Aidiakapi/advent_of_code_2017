@@ -1,5 +1,6 @@
 #![feature(auto_traits)]
 #![feature(decl_macro)]
+#![feature(entry_insert)]
 #![feature(maybe_uninit_array_assume_init)]
 #![feature(maybe_uninit_uninit_array)]
 #![feature(negative_impls)]
@@ -8,6 +9,7 @@
 
 pub mod astr;
 pub mod error;
+pub mod graph;
 pub mod inputs;
 pub mod iter;
 pub mod offsets;
