@@ -1,6 +1,6 @@
 use itertools::MinMaxResult;
 
-framework::day!(02, true, parse => pt1, pt2);
+framework::day!(02, parse => pt1, pt2);
 
 fn pt1(input: &[Vec<u32>]) -> u32 {
     input

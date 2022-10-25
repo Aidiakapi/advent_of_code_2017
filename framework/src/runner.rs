@@ -18,7 +18,7 @@ macro_rules! main {
                 "Advent".bright_red().bold(),
                 "of".bright_green(),
                 "Code".blue().bold(),
-                "2017".white().bold()
+                "2017".bright_magenta().bold()
             );
 
             let included_days: Vec<u32> = std::env::args()
@@ -39,14 +39,7 @@ macro_rules! main {
 
 #[macro_export]
 macro_rules! day {
-    ($day_nr:literal, true, $parse_fn:ident => $($part_fn:ident),+$(,)?) => {
-        $crate::day!(@primary, $day_nr, $parse_fn => $($part_fn),+);
-        $crate::day!(@bench, $day_nr, $parse_fn => $($part_fn),+);
-    };
-    ($day_nr:literal, false, $parse_fn:ident => $($part_fn:ident),+$(,)?) => {
-        $crate::day!(@primary, $day_nr, $parse_fn => $($part_fn),+);
-    };
-    (@primary, $day_nr:literal, $parse_fn:ident => $($part_fn:ident),+) => {
+    ($day_nr:literal, $parse_fn:ident => $($part_fn:ident),+) => {
 use super::prelude::*;
 pub struct DayMetadata;
 impl DayMetadata {
@@ -65,7 +58,7 @@ impl DayMetadata {
         $({
             let part_name = stringify!($part_fn);
             let remaining_space = OUTPUT_WIDTH.checked_sub(part_name.len() + 1).unwrap_or(0);
-            print!(" :: {} ", part_name.bright_yellow());
+            print!(" {} {} ", "::".magenta(), part_name.bright_yellow());
             _ = std::io::stdout().flush();
             let result: ColoredOutput = IntoResult::into_result($part_fn(&parsed))?.into();
             let str_len = result.value().len() - result.control_count();
@@ -81,8 +74,6 @@ impl DayMetadata {
         Ok(())
     }
 }
-    };
-    (@bench, $day_nr:literal, $parse_fn:ident => $($part_fn:ident),+) => {
 $crate::paste! {
     #[cfg(feature = "criterion")]
     #[criterion_macro::criterion]

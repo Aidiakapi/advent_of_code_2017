@@ -1,4 +1,4 @@
-framework::day!(06, true, parse => pt1, pt2);
+framework::day!(06, parse => pt1, pt2);
 
 fn pts<F: FnMut(&[u32]) -> bool>(input: &[u32], mut should_stop: F) {
     let mut memory_banks = input.to_vec();

@@ -1,4 +1,4 @@
-framework::day!(04, true, parse => pt1, pt2);
+framework::day!(04, parse => pt1, pt2);
 
 fn pt1(input: &[Vec<Vec<u8>>]) -> usize {
     input

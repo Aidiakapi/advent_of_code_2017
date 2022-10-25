@@ -1,7 +1,7 @@
 use std::str::FromStr;
 use strum_macros::EnumString;
 
-framework::day!(08, true, parse => pt1, pt2);
+framework::day!(08, parse => pt1, pt2);
 
 fn execute_instructions<F: FnMut(i32)>(instructions: &[Instruction], mut f: F) -> HashMap<Register, i32> {
     let mut registers = HashMap::<Register, i32>::new();

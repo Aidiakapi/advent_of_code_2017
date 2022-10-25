@@ -1,4 +1,4 @@
-framework::day!(07, true, parse => pt1, pt2);
+framework::day!(07, parse => pt1, pt2);
 
 fn get_root(input: &[Shoutout]) -> Result<&Shoutout> {
     let seen = input

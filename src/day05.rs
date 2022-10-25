@@ -1,4 +1,4 @@
-framework::day!(05, true, parse => pt1, pt2);
+framework::day!(05, parse => pt1, pt2);
 
 fn pts<F: Fn(i32) -> i32>(input: &[i32], remap: F) -> usize {
     let mut input = input.to_vec();

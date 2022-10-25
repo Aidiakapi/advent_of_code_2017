@@ -1,4 +1,4 @@
-framework::day!(01, true, parse => pt1, pt2);
+framework::day!(01, parse => pt1, pt2);
 
 fn sum_if_identical_when_offset(input: &[u8], offset: usize) -> u32 {
     input

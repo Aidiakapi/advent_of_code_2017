@@ -1,6 +1,6 @@
 //! Represent the hex-grid by making +Y map to south, and +X map to south-east.
 
-framework::day!(11, true, parse => pt1, pt2);
+framework::day!(11, parse => pt1, pt2);
 
 fn dist(p: Vec2i32) -> i32 {
     p.x.abs().max(p.y.abs()).max((p.x + p.y).abs())

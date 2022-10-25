@@ -1,4 +1,4 @@
-framework::day!(12, false, parse => pt1, pt2);
+framework::day!(12, parse => pt1, pt2);
 
 type Pipe = u16;
 type Connections = Vec<Pipe>;

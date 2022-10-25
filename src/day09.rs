@@ -1,4 +1,4 @@
-framework::day!(09, true, parse => pt1, pt2);
+framework::day!(09, parse => pt1, pt2);
 
 #[derive(Debug, Clone)]
 enum Stream<'i> {

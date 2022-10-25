@@ -1,4 +1,4 @@
-framework::day!(10, true, parse => pt1, pt2);
+framework::day!(10, parse => pt1, pt2);
 
 fn knot_hash<const N: usize, const ROUNDS: usize, T, F: FnOnce(&[u8; N]) -> T>(
     input: &[u8],
