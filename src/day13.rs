@@ -29,9 +29,9 @@ fn pt1(layers: &[Layer]) -> u32 {
 }
 
 fn pt2(layers: &[Layer]) -> u32 {
-    // We represent the infinite sequence of starting time for which no
+    // We represent the infinite sequence of starting time for which no exist
     // collisions, via:
-    // - A base, which can be multiplier with any number 0 through infinity
+    // - A base, which can be multiplied with any number 0 through infinity
     // - Offsets, which are added to the base
     //
     // For example, with base = 4, and offsets = [1, 2], we represent the
@@ -61,8 +61,8 @@ fn pt2(layers: &[Layer]) -> u32 {
     // This process is repeated for each layer.
     //
     // The end result is a representation of the infinite sequence of all
-    // starting times, which result in no collisions. The answer is simply the
-    // first number in that sequence.
+    // starting times, where no collisions would occur after going through all
+    // the layers. The answer is simply the first number in that sequence.
 
     let mut base = 1;
     let mut offsets = vec![0];
