@@ -8,6 +8,7 @@ ahash = "0.8"
 arrayvec = "0.7"
 framework = { path = "./framework", package = "advent_of_code_framework" }
 itertools = "0.10"
+num = "0.4"
 strum = "0.24"
 strum_macros = "0.24"
 

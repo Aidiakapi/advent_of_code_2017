@@ -18,6 +18,7 @@ dependencies = [
  "criterion",
  "criterion-macro",
  "itertools",
+ "num",
  "strum",
  "strum_macros",
 ]

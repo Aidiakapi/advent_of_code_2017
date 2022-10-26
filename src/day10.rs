@@ -67,6 +67,7 @@ fn parse(input: &[u8]) -> Result<&[u8]> {
 }
 
 #[cfg(test)]
+#[cfg(not(feature = "criterion"))]
 fn pt1_test(input: &[u8]) -> Result<MulOutput<[u16; 2]>> {
     pt1_impl::<5>(input)
 }
