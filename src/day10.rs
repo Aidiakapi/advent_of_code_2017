@@ -29,6 +29,21 @@ fn knot_hash<const N: usize, const ROUNDS: usize, T, F: FnOnce(&[u8; N]) -> T>(
     f(&data)
 }
 
+pub fn full_knot_hash(input: &[u8]) -> [u8; 16] {
+    let lengths: Vec<u8> = input
+        .iter()
+        .cloned()
+        .chain([17, 31, 73, 47, 23].into_iter())
+        .collect();
+
+    knot_hash::<256, 64, _, _>(&lengths, |hash| {
+        util::init_array::<u8, 16, _>(|i| {
+            let base = i * 16;
+            hash[base..base + 16].iter().fold(0, |h, &n| h ^ n)
+        })
+    })
+}
+
 fn pt1_impl<const N: usize>(input: &[u8]) -> Result<MulOutput<[u16; 2]>> {
     use parsers::*;
     let lengths: Vec<_> = number::<u8>().sep_by(token(b',')).execute(input)?;
@@ -42,19 +57,7 @@ fn pt1(input: &[u8]) -> Result<MulOutput<[u16; 2]>> {
 }
 
 fn pt2(input: &[u8]) -> String {
-    let lengths: Vec<u8> = input
-        .trim_ascii()
-        .iter()
-        .cloned()
-        .chain([17, 31, 73, 47, 23].into_iter())
-        .collect();
-
-    let hash = knot_hash::<256, 64, _, _>(&lengths, |hash| {
-        util::init_array::<u8, 16, _>(|i| {
-            let base = i * 16;
-            hash[base..base + 16].iter().fold(0, |h, &n| h ^ n)
-        })
-    });
+    let hash = full_knot_hash(&input);
     use std::fmt::Write;
     hash.into_iter().fold(String::new(), |mut s, v| {
         _ = write!(s, "{v:0>2x}");
@@ -63,7 +66,7 @@ fn pt2(input: &[u8]) -> String {
 }
 
 fn parse(input: &[u8]) -> Result<&[u8]> {
-    Ok(input)
+    Ok(input.trim_ascii())
 }
 
 #[cfg(test)]
