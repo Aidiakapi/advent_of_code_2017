@@ -69,14 +69,10 @@ fn parse(input: &[u8]) -> Result<&[u8]> {
     Ok(input.trim_ascii())
 }
 
-#[cfg(test)]
-#[cfg(not(feature = "criterion"))]
-fn pt1_test(input: &[u8]) -> Result<MulOutput<[u16; 2]>> {
-    pt1_impl::<5>(input)
-}
-
 tests! {
-    test_pt!(parse, pt1_test, b"3,4,1,5" => MulOutput([3, 4]));
+    test_pt!(parse, pt1, |input| { super::pt1_impl::<5>(&input) },
+        b"3,4,1,5" => MulOutput([3, 4])
+    );
     test_pt!(parse, pt2,
         b"" => "a2582a3a0e66e6e86e3812dcb672a272",
         b"AoC 2017" => "33efeb34ea91902bb2f59c9920caa6cd",

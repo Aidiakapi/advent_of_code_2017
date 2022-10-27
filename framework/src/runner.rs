@@ -107,16 +107,16 @@ macro_rules! tests {
 
 #[macro_export]
 macro_rules! test_pt {
-    ($parse_fn:ident, $pt_fn:ident, $($input:expr => $output:expr),+$(,)?) => {
+    ($parse_fn:ident, $test_name:ident, |$input_name:ident| $part_logic:block, $($input:expr => $output:expr),+$(,)?) => {
 #[test]
-fn $pt_fn() {
+fn $test_name() {
     use $crate::runner::*;
     $(
-        let parsed = match IntoResult::into_result(super::$parse_fn($input)) {
+        let $input_name = match IntoResult::into_result(super::$parse_fn($input)) {
             Ok(x) => x,
             Err(e) => panic!("parsing failed: {e}\ninput: {:?}", String::from_utf8_lossy($input).into_owned()),
         };
-        let result = match IntoResult::into_result(super::$pt_fn(&parsed)) {
+        let result = match IntoResult::into_result($part_logic) {
             Ok(x) => x,
             Err(e) => panic!("execution failed: {e}\ninput: {:?}", String::from_utf8_lossy($input).into_owned()),
         };
@@ -126,5 +126,8 @@ fn $pt_fn() {
         }
     )+
 }
-    }
+    };
+    ($parse_fn:ident, $pt_fn:ident, $($input:expr => $output:expr),+$(,)?) => {
+        $crate::test_pt!($parse_fn, $pt_fn, |input| { super::$pt_fn(&input) }, $($input => $output),+);
+    };
 }

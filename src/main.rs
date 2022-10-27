@@ -1,5 +1,6 @@
 #![feature(byte_slice_trim_ascii)]
 #![feature(never_type)]
+
 #![feature(custom_test_frameworks)]
 #![cfg_attr(feature = "criterion", test_runner(criterion::runner))]
 
@@ -21,4 +22,5 @@ framework::main!(
     day13,
     day14,
     day15,
+    day16,
 );
