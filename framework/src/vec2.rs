@@ -28,6 +28,7 @@ impl<T: num::Zero> Vec2<T> {
 }
 
 pub type Vec2i32 = Vec2<i32>;
+pub type Vec2us = Vec2<usize>;
 
 macro_rules! impl_binary_op {
     ($trait:ident, $fn_name:ident, $assign_trait:ident, $assign_fn_name:ident) => {

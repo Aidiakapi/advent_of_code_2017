@@ -10,7 +10,7 @@ pub enum Error {
     ParseError(#[from] crate::parsers::ParseError),
     #[error("not yet implemented")]
     NotImplemented,
-    #[error("invalid input")]
+    #[error("invalid input '{0}'")]
     InvalidInput(&'static str),
     #[error("no solution")]
     NoSolution,
