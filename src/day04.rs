@@ -1,6 +1,6 @@
 framework::day!(04, parse => pt1, pt2);
 
-fn pt1(input: &[Vec<Vec<u8>>]) -> usize {
+fn pt1(input: &[Vec<&[u8]>]) -> usize {
     input
         .iter()
         .filter(|passphrase| passphrase.iter().all_unique())
@@ -19,7 +19,7 @@ fn to_frequency_list(letters: &[u8]) -> Vec<(u8, usize)> {
     frequency_list
 }
 
-fn pt2(input: &[Vec<Vec<u8>>]) -> usize {
+fn pt2(input: &[Vec<&[u8]>]) -> usize {
     input
         .iter()
         .filter(|passphrase| {
@@ -31,10 +31,9 @@ fn pt2(input: &[Vec<Vec<u8>>]) -> usize {
         .count()
 }
 
-fn parse(input: &[u8]) -> Result<Vec<Vec<Vec<u8>>>> {
+fn parse(input: &[u8]) -> Result<Vec<Vec<&[u8]>>> {
     use parsers::*;
-    let letter = pattern!(b'a'..=b'z');
-    let word = letter.repeat_into();
+    let word = take_while((), |_, l| matches!(l, b'a'..=b'z'));
     word.sep_by(token(b' ')).sep_by(token(b'\n')).execute(input)
 }
 

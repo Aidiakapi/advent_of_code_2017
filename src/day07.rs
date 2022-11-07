@@ -1,6 +1,6 @@
 framework::day!(07, parse => pt1, pt2);
 
-fn get_root(input: &[Shoutout]) -> Result<&Shoutout> {
+fn get_root<'i>(input: &'i [Shoutout<'i>]) -> Result<&'i Shoutout<'i>> {
     let seen = input
         .iter()
         .flat_map(|shoutout| shoutout.carrying.iter().map(|vs| vs.iter()).flatten())
@@ -11,7 +11,7 @@ fn get_root(input: &[Shoutout]) -> Result<&Shoutout> {
         .ok_or(Error::NoSolution)
 }
 
-fn pt1(input: &[Shoutout]) -> Result<&AStr> {
+fn pt1<'i>(input: &'i [Shoutout<'i>]) -> Result<&'i AStr> {
     get_root(input).map(|shoutout| &*shoutout.name)
 }
 
@@ -47,16 +47,15 @@ fn pt2(input: &[Shoutout]) -> Result<i32> {
     }
 }
 
-struct Shoutout {
-    name: AString,
+struct Shoutout<'i> {
+    name: &'i AStr,
     weight: u32,
-    carrying: Option<Vec<AString>>,
+    carrying: Option<Vec<&'i AStr>>,
 }
 
 fn parse(input: &[u8]) -> Result<Vec<Shoutout>> {
     use parsers::*;
-    let letter = pattern!(b'a'..=b'z');
-    let word = letter.repeat_into::<AString>();
+    let word = take_while((), |_, l| matches!(l, b'a'..=b'z'));
     let base = word
         .clone()
         .trailed(token(b" ("))

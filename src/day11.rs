@@ -28,12 +28,13 @@ fn pt2(input: &[Offset]) -> i32 {
 
 fn parse(input: &[u8]) -> Result<Vec<Offset>> {
     use parsers::*;
-    let dir = token((b"se", Offset::X_POS))
-        .or(token((b"ne", Offset::X_POS_Y_NEG)))
-        .or(token((b"nw", Offset::X_NEG)))
-        .or(token((b"sw", Offset::X_NEG_Y_POS)))
-        .or(token((b'n', Offset::Y_NEG)))
-        .or(token((b's', Offset::Y_POS)));
+    #[rustfmt::skip]
+    let dir = token((b"se", Offset::X_POS      ))
+          .or(token((b"ne", Offset::X_POS_Y_NEG)))
+          .or(token((b"nw", Offset::X_NEG      )))
+          .or(token((b"sw", Offset::X_NEG_Y_POS)))
+          .or(token((b'n' , Offset::Y_NEG      )))
+          .or(token((b's' , Offset::Y_POS      )));
     dir.sep_by(token(b',')).execute(input)
 }
 
