@@ -159,19 +159,17 @@ fn parse(input: &[u8]) -> Result<Vec<Instruction>> {
     use parsers::*;
     let register = pattern!(b'a'..=b'z').map(|l| l - b'a');
     let value = number::<Value>();
-    let source = register
-        .map(|r| Source::Register(r))
-        .or(value.map(|v| Source::Value(v)));
+    let source = register.map(Source::Register).or(value.map(Source::Value));
     let register_source = register.trailed(token(b' ')).and(source);
     let source_source = source.trailed(token(b' ')).and(source);
     #[rustfmt::skip]
     let instruction =
-            token(b"snd ").then(register)       .map(| r    | Instruction::Snd(r))
+            token(b"snd ").then(register)       .map(         Instruction::Snd      )
         .or(token(b"set ").then(register_source).map(|(r, s)| Instruction::Set(r, s)))
         .or(token(b"add ").then(register_source).map(|(r, s)| Instruction::Add(r, s)))
         .or(token(b"mul ").then(register_source).map(|(r, s)| Instruction::Mul(r, s)))
         .or(token(b"mod ").then(register_source).map(|(r, s)| Instruction::Mod(r, s)))
-        .or(token(b"rcv ").then(register)       .map(| r    | Instruction::Rcv(r)))
+        .or(token(b"rcv ").then(register)       .map(         Instruction::Rcv      ))
         .or(token(b"jgz ").then(  source_source).map(|(a, b)| Instruction::Jgz(a, b)));
 
     instruction.sep_by(token(b'\n')).execute(input)

@@ -57,7 +57,7 @@ fn pt1(input: &[u8]) -> Result<MulOutput<[u16; 2]>> {
 }
 
 fn pt2(input: &[u8]) -> String {
-    let hash = full_knot_hash(&input);
+    let hash = full_knot_hash(input);
     use std::fmt::Write;
     hash.into_iter().fold(String::new(), |mut s, v| {
         _ = write!(s, "{v:0>2x}");

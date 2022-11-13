@@ -21,14 +21,14 @@ impl Inputs {
     pub fn get(&mut self, day: u32) -> Result<Vec<u8>> {
         let path = format!("./inputs/{day:0>2}.txt");
         let path = Path::new(&path);
-        if let Ok(mut input) = std::fs::read(&path) {
+        if let Ok(mut input) = std::fs::read(path) {
             input.retain(|c| *c != b'\r');
             return Ok(input);
         }
 
         let input = self.download(day)?;
         std::fs::create_dir_all(path.parent().unwrap())?;
-        std::fs::write(&path, &input)?;
+        std::fs::write(path, &input)?;
         Ok(input)
     }
 
@@ -55,7 +55,8 @@ impl Inputs {
         let resp = ureq::get(&format!("https://adventofcode.com/2017/day/{day}/input"))
             .set("cookie", &cookie_values)
             .timeout(Duration::from_secs(5))
-            .call()?;
+            .call()
+            .map_err(Box::new)?;
 
         let mut buf = Vec::new();
         resp.into_reader().read_to_end(&mut buf)?;

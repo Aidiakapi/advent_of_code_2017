@@ -19,6 +19,6 @@ pub mod prelude;
 pub mod result;
 pub mod runner;
 pub mod util;
-pub mod vec2;
+pub mod vecs;
 
 pub use paste::paste;

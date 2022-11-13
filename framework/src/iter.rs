@@ -29,7 +29,7 @@ pub trait IteratorExt: Iterator {
             }
         };
 
-        while let Some(value) = self.next() {
+        for value in self {
             index += 1;
             if value == common {
                 continue;

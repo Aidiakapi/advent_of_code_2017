@@ -2,26 +2,28 @@
 
 framework::day!(11, parse => pt1, pt2);
 
-fn dist(p: Vec2i32) -> i32 {
+type Vec2 = framework::vecs::Vec2<i32>;
+
+fn dist(p: Vec2) -> i32 {
     p.x.abs().max(p.y.abs()).max((p.x + p.y).abs())
 }
 
 fn pt1(input: &[Offset]) -> i32 {
     let target = input
         .iter()
-        .fold(Vec2i32::zero(), |p, &o| p.neighbor(o).unwrap());
+        .fold(Vec2::zero(), |p, &o| p.neighbor(o).unwrap());
     dist(target)
 }
 
 fn pt2(input: &[Offset]) -> i32 {
-    let mut current = Vec2i32::zero();
+    let mut current = Vec2::zero();
     input
         .iter()
         .map(|&o| {
             current = current.neighbor(o).unwrap();
             current
         })
-        .map(|p| dist(p))
+        .map(dist)
         .max()
         .unwrap()
 }

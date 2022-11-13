@@ -1,6 +1,8 @@
 framework::day!(03, parse => pt1, pt2);
 
-fn calculate_position(value: u32) -> Result<Vec2i32> {
+type Vec2 = framework::vecs::Vec2<i32>;
+
+fn calculate_position(value: u32) -> Result<Vec2> {
     let mut value = match value {
         0 => return Err(Error::InvalidInput("0 is invalid")),
         1 => return Ok(Vec2::zero()),
@@ -32,7 +34,7 @@ fn pt1(&input: &u32) -> Result<i32> {
 }
 
 fn pt2(&input: &u32) -> Result<u32> {
-    let mut cells = HashMap::<Vec2i32, u32>::new();
+    let mut cells = HashMap::<Vec2, u32>::new();
     cells.insert(Vec2::zero(), 1);
     let mut i = 1;
     loop {

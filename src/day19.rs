@@ -1,8 +1,10 @@
 framework::day!(19, parse => pt1, pt2);
 
+type Vec2 = framework::vecs::Vec2<usize>;
+
 fn pts(input: &Input) -> Result<(usize, String)> {
     let mut visited = String::new();
-    let mut pos = Some(Vec2us::new(input.starting_point, 0));
+    let mut pos = Some(Vec2::new(input.starting_point, 0));
     let mut dir = Offset::Y_POS;
     let mut steps = 0;
     loop {
@@ -56,8 +58,8 @@ trait Get<T> {
     fn get(&self, index: T) -> u8;
 }
 
-impl Get<Vec2us> for Input<'_> {
-    fn get(&self, index: Vec2us) -> u8 {
+impl Get<Vec2> for Input<'_> {
+    fn get(&self, index: Vec2) -> u8 {
         if index.x < self.width && index.y < self.height {
             self.data[index.x + index.y * (self.width + 1)]
         } else {
@@ -66,13 +68,13 @@ impl Get<Vec2us> for Input<'_> {
     }
 }
 
-impl Get<Option<Vec2us>> for Input<'_> {
-    fn get(&self, index: Option<Vec2us>) -> u8 {
+impl Get<Option<Vec2>> for Input<'_> {
+    fn get(&self, index: Option<Vec2>) -> u8 {
         index.map(|index| self.get(index)).unwrap_or(b' ')
     }
 }
 
-fn parse<'i>(input: &'i [u8]) -> Result<Input<'i>> {
+fn parse(input: &[u8]) -> Result<Input> {
     let line_width = input
         .iter()
         .position(|c| *c == b'\n')

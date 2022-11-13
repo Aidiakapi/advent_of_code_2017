@@ -3,7 +3,7 @@ framework::day!(07, parse => pt1, pt2);
 fn get_root<'i>(input: &'i [Shoutout<'i>]) -> Result<&'i Shoutout<'i>> {
     let seen = input
         .iter()
-        .flat_map(|shoutout| shoutout.carrying.iter().map(|vs| vs.iter()).flatten())
+        .flat_map(|shoutout| shoutout.carrying.iter().flat_map(|vs| vs.iter()))
         .collect::<HashSet<_>>();
     input
         .iter()
@@ -12,13 +12,13 @@ fn get_root<'i>(input: &'i [Shoutout<'i>]) -> Result<&'i Shoutout<'i>> {
 }
 
 fn pt1<'i>(input: &'i [Shoutout<'i>]) -> Result<&'i AStr> {
-    get_root(input).map(|shoutout| &*shoutout.name)
+    get_root(input).map(|shoutout| shoutout.name)
 }
 
 fn pt2(input: &[Shoutout]) -> Result<i32> {
     let node_map = input
         .iter()
-        .map(|shoutout| (&*shoutout.name, shoutout))
+        .map(|shoutout| (shoutout.name, shoutout))
         .collect::<HashMap<_, _>>();
 
     fn calc_weight(name: &AStr, node_map: &HashMap<&AStr, &Shoutout>) -> u32 {
@@ -38,7 +38,7 @@ fn pt2(input: &[Shoutout]) -> Result<i32> {
         let distinct = carrying.iter().map(|c| calc_weight(c)).find_distinct();
         match distinct {
             DistinctResult::SingleDistinct(v) => {
-                current = node_map[&*carrying[v.index]];
+                current = node_map[carrying[v.index]];
                 required_adjustment = v.common as i32 - v.distinct as i32;
             }
             DistinctResult::Unique(_) => return Ok(current.weight as i32 + required_adjustment),
@@ -57,7 +57,6 @@ fn parse(input: &[u8]) -> Result<Vec<Shoutout>> {
     use parsers::*;
     let word = take_while((), |_, l| matches!(l, b'a'..=b'z'));
     let base = word
-        .clone()
         .trailed(token(b" ("))
         .and(number::<u32>())
         .trailed(token(b')'));

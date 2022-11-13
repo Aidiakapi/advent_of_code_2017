@@ -42,7 +42,7 @@ fn pt2(input: &[Stream]) -> u32 {
         .sum()
 }
 
-fn parse<'s>(input: &'s [u8]) -> Result<Vec<Stream<'s>>> {
+fn parse(input: &[u8]) -> Result<Vec<Stream>> {
     use parsers::*;
     let garbage = token(b'<')
         .then(
@@ -62,7 +62,7 @@ fn parse<'s>(input: &'s [u8]) -> Result<Vec<Stream<'s>>> {
             .map(|n| n.unwrap_or(b"")),
         )
         .trailed(token(b'>'))
-        .map(|garbage: &'s [u8]| Stream::<'s>::Garbage(garbage));
+        .map(Stream::Garbage);
     let open = token((b'{', Stream::GroupOpen));
     let close = token((b'}', Stream::GroupClose));
     let section = open.or(close).or(garbage);

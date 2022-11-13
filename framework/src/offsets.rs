@@ -1,4 +1,4 @@
-use crate::vec2::Vec2;
+use crate::vecs::Vec2;
 use num::{CheckedAdd, CheckedSub, One};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

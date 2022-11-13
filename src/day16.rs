@@ -14,10 +14,10 @@ fn initial_order<const N: usize>() -> [u8; N] {
 
 fn dance<const N: usize>(order: &mut [u8; N], moves: &[Move]) {
     for mv in moves {
-        match mv {
-            &Move::Spin(n) => order.rotate_right(n as usize),
-            &Move::Exchange(a, b) => order.swap(a as usize, b as usize),
-            &Move::Partner(a, b) => {
+        match *mv {
+            Move::Spin(n) => order.rotate_right(n as usize),
+            Move::Exchange(a, b) => order.swap(a as usize, b as usize),
+            Move::Partner(a, b) => {
                 let a = order.iter().position(|&c| c == a).unwrap();
                 let b = order.iter().position(|&c| c == b).unwrap();
                 order.swap(a, b);
@@ -60,7 +60,7 @@ fn parse(input: &[u8]) -> Result<Vec<Move>> {
     let partner = token(b'p').then(any()).trailed(token(b'/')).and(any());
 
     let mv = spin
-        .map(|n| Move::Spin(n))
+        .map(Move::Spin)
         .or(exchange.map(|(a, b)| Move::Exchange(a, b)))
         .or(partner.map(|(a, b)| Move::Partner(a, b)));
     mv.sep_by(token(b',')).execute(input)

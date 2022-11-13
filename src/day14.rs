@@ -3,7 +3,7 @@ use std::fmt::Write;
 
 framework::day!(14, parse => pt1, pt2);
 
-fn iterate_rows<'i>(input: &'i AStr) -> impl Iterator<Item = [u8; 16]> + 'i {
+fn iterate_rows(input: &AStr) -> impl Iterator<Item = [u8; 16]> + '_ {
     let mut buffer = AString::with_capacity(input.len() + 4);
     let mut nr_str = String::new();
     buffer.extend_from_slice(input);
