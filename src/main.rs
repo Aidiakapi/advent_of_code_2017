@@ -1,9 +1,12 @@
 #![feature(byte_slice_trim_ascii)]
+#![feature(generic_const_exprs)]
 #![feature(never_type)]
 #![feature(stmt_expr_attributes)]
 
 #![feature(custom_test_frameworks)]
 #![cfg_attr(feature = "criterion", test_runner(criterion::runner))]
+
+#![allow(incomplete_features)]
 
 #![allow(clippy::zero_prefixed_literal)]
 
@@ -30,4 +33,5 @@ framework::main!(
     day18,
     day19,
     day20,
+    day21,
 );
