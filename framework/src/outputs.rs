@@ -79,7 +79,7 @@ macro_rules! impl_binary_op_output {
                 for (i, v) in input.0.into_iter().enumerate() {
                     let s = v.to_string();
                     if i != 0 {
-                        _ = write!(value, "{} ", $symbol.bright_green());
+                        _ = write!(value, "{} ", $symbol.bright_magenta());
                         str_len += 2;
                     }
                     _ = write!(value, "{} ", s.white());
@@ -88,7 +88,7 @@ macro_rules! impl_binary_op_output {
                 }
 
                 if str_len != 0 {
-                    _ = write!(value, "{} ", "=".bright_green());
+                    _ = write!(value, "{} ", "=".bright_magenta());
                     str_len += 2;
                 }
 

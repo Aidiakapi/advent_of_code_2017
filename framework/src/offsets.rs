@@ -46,6 +46,7 @@ impl Offset {
             value: (self.value << 2) & 0b1100 | (self.value >> 2) & 0b0011,
         }
     }
+    /// Rotates a positive X to negative Y
     pub const fn rot_270(self) -> Offset {
         Offset {
             value: (self.value << 3) & 0b1000 | (self.value >> 1) & 0b0111,
