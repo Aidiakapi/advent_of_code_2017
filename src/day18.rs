@@ -3,13 +3,13 @@ use std::collections::VecDeque;
 framework::day!(18, parse => pt1, pt2);
 
 #[derive(Clone)]
-struct VM<'i> {
-    instructions: &'i [Instruction],
-    registers: [Value; 26],
-    ip: usize,
+pub struct VM<'i> {
+    pub instructions: &'i [Instruction],
+    pub registers: [Value; 26],
+    pub ip: usize,
 }
 
-enum ExecRes {
+pub enum ExecRes {
     Continuing,
     Terminated,
     Sending(Register),
@@ -17,7 +17,7 @@ enum ExecRes {
 }
 
 impl VM<'_> {
-    fn new(instructions: &[Instruction]) -> VM {
+    pub fn new(instructions: &[Instruction]) -> VM {
         VM {
             instructions,
             ip: 0,
@@ -35,7 +35,7 @@ impl VM<'_> {
         }
     }
 
-    fn next(&mut self) -> ExecRes {
+    pub fn next(&mut self) -> ExecRes {
         if let Some(instruction) = self.instructions.get(self.ip) {
             self.ip += 1;
 
@@ -56,6 +56,13 @@ impl VM<'_> {
                         self.ip = (self.ip as Value + self.get(offset) - 1) as usize;
                     }
                 }
+                // Only used for day 23:
+                Jnz(condition, offset) => {
+                    if self.get(condition) != 0 {
+                        self.ip = (self.ip as Value + self.get(offset) - 1) as usize;
+                    }
+                }
+                Sub(r, s) => self.registers[*r as usize] -= self.get(s),
             }
             ExecRes::Continuing
         } else {
@@ -139,13 +146,13 @@ type Register = u8;
 type Value = i64;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Source {
+pub enum Source {
     Register(Register),
     Value(Value),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Instruction {
+pub enum Instruction {
     Snd(Register),
     Set(Register, Source),
     Add(Register, Source),
@@ -153,9 +160,12 @@ enum Instruction {
     Mod(Register, Source),
     Rcv(Register),
     Jgz(Source, Source),
+    // Only used for day 23:
+    Jnz(Source, Source),
+    Sub(Register, Source),
 }
 
-fn parse(input: &[u8]) -> Result<Vec<Instruction>> {
+pub fn parse(input: &[u8]) -> Result<Vec<Instruction>> {
     use parsers::*;
     let register = pattern!(b'a'..=b'z').map(|l| l - b'a');
     let value = number::<Value>();
@@ -170,7 +180,10 @@ fn parse(input: &[u8]) -> Result<Vec<Instruction>> {
         .or(token(b"mul ").then(register_source).map(|(r, s)| Instruction::Mul(r, s)))
         .or(token(b"mod ").then(register_source).map(|(r, s)| Instruction::Mod(r, s)))
         .or(token(b"rcv ").then(register)       .map(         Instruction::Rcv      ))
-        .or(token(b"jgz ").then(  source_source).map(|(a, b)| Instruction::Jgz(a, b)));
+        .or(token(b"jgz ").then(  source_source).map(|(a, b)| Instruction::Jgz(a, b)))
+        // Only used for day 23:
+        .or(token(b"jnz ").then(  source_source).map(|(a, b)| Instruction::Jnz(a, b)))
+        .or(token(b"sub ").then(register_source).map(|(a, b)| Instruction::Sub(a, b)));
 
     instruction.sep_by(token(b'\n')).execute(input)
 }

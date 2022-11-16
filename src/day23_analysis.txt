@@ -1,0 +1,152 @@
+=== Input ===
+
+set b 57
+set c b
+jnz a 2
+jnz 1 5
+mul b 100
+sub b -100000
+set c b
+sub c -17000
+set f 1
+set d 2
+set e 2
+set g d
+mul g e
+sub g b
+jnz g 2
+set f 0
+sub e -1
+set g e
+sub g b
+jnz g -8
+sub d -1
+set g d
+sub g b
+jnz g -13
+jnz f 2
+sub h -1
+set g b
+sub g c
+jnz g 2
+jnz 1 3
+sub b -17
+jnz 1 -23
+
+=== Labeled input ===
+
+00: set b 57
+01: set c b
+02: jnz a 04   -------------+
+03: jnz 1 08   -------+     |
+04: mul b 100  <------|-----+
+05: sub b -100000     |
+06: set c b           |
+07: sub c -17000      |
+08: set f 1    <------+-----+
+09: set d 2                 |
+10: set e 2    <---------+  |
+11: set g d    <------+  |  |
+12: mul g e           |  |  |
+13: sub g b           |  |  |
+14: jnz g 16   ----+  |  |  |
+15: set f 0        |  |  |  |
+16: sub e -1   <---+  |  |  |
+17: set g e           |  |  |
+18: sub g b           |  |  |
+19: jnz g 11   -------+  |  |
+20: sub d -1             |  |
+21: set g d              |  |
+22: sub g b              |  |
+23: jnz g 10   ----------+  |
+24: jnz f 26   ----+        |
+25: sub h -1       |        |
+26: set g b    <---+        |
+27: sub g c                 |
+28: jnz g 30   -------+     |
+29: jnz 1 32   ----+  |     |
+30: sub b -17  <---|--+     |
+31: jnz 1 8    ----|--------+
+               <---+
+
+=== Basic control flow and optimization ===
+
+// Instructions 00-07, 02-03 elided, constants propegated
+b = 57
+b = b * 100 + 100_000;
+c = b * 100 + 117_000;
+
+'outer: loop {
+    // 08-09
+    f = 1;
+    d = 2;
+    
+    'middle: loop {
+        // 10
+        e = 2;
+        'inner: loop {
+            // 11-14, 15 inside
+            if d * e == b {
+                f = 0;
+            }
+            // 16
+            e += 1;
+            // 17-19
+            if e == b {
+                break;
+            }
+        }
+        // 20
+        d += 1;
+        // 21-23
+        if d == b {
+            break;
+        }
+    }
+
+    // 24-25
+    if f == 0 {
+        h += 1;
+    }
+
+    // 26-28, 29 inside
+    if b == c {
+        break;
+    }
+    // 30
+    b += 17;
+}
+
+=== Loop transformations, scoping, and naming ===
+let input = 57;
+let lower = 57 * 100 + 100_000;
+let upper = 57 * 100 + 117_000;
+const STEP: usize = 17;
+
+let mut non_prime_count = 0;
+
+// 00-07, 26-31
+for current in (lower..=upper).step_by(STEP) {
+    // 08
+    let mut is_prime = true;
+
+    // 09, 20-23
+    for i1 in 2..current {
+        // 10, 16-19
+        for i2 in 2..current {
+            // 11-14, 15 inside
+            if i1 * i2 == current {
+                is_prime = false;
+            }
+        }
+    }
+
+    // 24-25
+    if !is_prime {
+        non_prime_count += 1;
+    }
+}
+
+=== Analysis ===
+It iterates from [lower, upper] (inclusive) in increments of STEP, tests if a
+number is a prime and if it is NOT a prime, it increments the result counter.
