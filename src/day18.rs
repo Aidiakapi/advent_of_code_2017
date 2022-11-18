@@ -167,23 +167,27 @@ pub enum Instruction {
 
 pub fn parse(input: &[u8]) -> Result<Vec<Instruction>> {
     use parsers::*;
-    let register = pattern!(b'a'..=b'z').map(|l| l - b'a');
-    let value = number::<Value>();
-    let source = register.map(Source::Register).or(value.map(Source::Value));
-    let register_source = register.trailed(token(b' ')).and(source);
-    let source_source = source.trailed(token(b' ')).and(source);
+    let register = pattern!(b'a'..=b'z').map(|l| Source::Register(l - b'a'));
+    let value = number::<Value>().map(Source::Value);
+    let source = register.or(value);
+    let mnemonic = pattern!(b'a'..=b'z').many_n::<3>();
+
     #[rustfmt::skip]
-    let instruction =
-            token(b"snd ").then(register)       .map(         Instruction::Snd      )
-        .or(token(b"set ").then(register_source).map(|(r, s)| Instruction::Set(r, s)))
-        .or(token(b"add ").then(register_source).map(|(r, s)| Instruction::Add(r, s)))
-        .or(token(b"mul ").then(register_source).map(|(r, s)| Instruction::Mul(r, s)))
-        .or(token(b"mod ").then(register_source).map(|(r, s)| Instruction::Mod(r, s)))
-        .or(token(b"rcv ").then(register)       .map(         Instruction::Rcv      ))
-        .or(token(b"jgz ").then(  source_source).map(|(a, b)| Instruction::Jgz(a, b)))
-        // Only used for day 23:
-        .or(token(b"jnz ").then(  source_source).map(|(a, b)| Instruction::Jnz(a, b)))
-        .or(token(b"sub ").then(register_source).map(|(a, b)| Instruction::Sub(a, b)));
+    let instruction = mnemonic
+        .and(token(b' ').then(source)).and(token(b' ').then(source).opt())
+        .map_res(|((mnemonic, a), b)| Ok(match (&mnemonic, a, b) {
+            (b"snd", Source::Register(a), None   ) => Instruction::Snd(a   ),
+            (b"set", Source::Register(a), Some(b)) => Instruction::Set(a, b),
+            (b"add", Source::Register(a), Some(b)) => Instruction::Add(a, b),
+            (b"mul", Source::Register(a), Some(b)) => Instruction::Mul(a, b),
+            (b"mod", Source::Register(a), Some(b)) => Instruction::Mod(a, b),
+            (b"rcv", Source::Register(a), None   ) => Instruction::Rcv(a   ),
+            (b"jgz",                  a,  Some(b)) => Instruction::Jgz(a, b),
+            // Only used for day 23:
+            (b"jnz",                  a,  Some(b)) => Instruction::Jnz(a, b),
+            (b"sub", Source::Register(a), Some(b)) => Instruction::Sub(a, b),
+            _ => return Err(ParseError::TokenDoesNotMatch),
+        }));
 
     instruction.sep_by(token(b'\n')).execute(input)
 }
