@@ -107,11 +107,3 @@ impl Primes {
 fn parse(input: &[u8]) -> Result<Vec<Instruction>> {
     day18::parse(input)
 }
-
-// tests! {
-//     const EXAMPLE: &'static [u8] = b"\
-// ";
-//
-//     test_pt!(parse, pt1, EXAMPLE => 7);
-//     // test_pt!(parse, pt2, EXAMPLE => 5);
-// }
