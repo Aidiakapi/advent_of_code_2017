@@ -33,7 +33,7 @@ pub fn full_knot_hash(input: &[u8]) -> [u8; 16] {
     let lengths: Vec<u8> = input
         .iter()
         .cloned()
-        .chain([17, 31, 73, 47, 23].into_iter())
+        .chain([17, 31, 73, 47, 23])
         .collect();
 
     knot_hash::<256, 64, _, _>(&lengths, |hash| {

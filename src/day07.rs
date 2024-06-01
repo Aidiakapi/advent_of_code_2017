@@ -55,7 +55,7 @@ struct Shoutout<'i> {
 
 fn parse(input: &[u8]) -> Result<Vec<Shoutout>> {
     use parsers::*;
-    let word = take_while((), |_, l| matches!(l, b'a'..=b'z'));
+    let word = take_while((), |_, l| l.is_ascii_lowercase());
     let base = word
         .trailed(token(b" ("))
         .and(number::<u32>())

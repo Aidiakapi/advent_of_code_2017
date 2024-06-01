@@ -20,56 +20,48 @@ fn iterate_connections(ports: &[Port], mut f: impl FnMut(&[Port])) -> Result<()>
     let mut port_stack = vec![];
     let mut index_stack = vec![];
 
-    #[allow(clippy::too_many_arguments)]
-    fn visit(
-        connector: u32,
-        used: &mut u64,
-        port_stack: &mut Vec<Port>,
-        index_stack: &mut Vec<usize>,
-        ports: &[Port],
-        forward: &[(Port, usize)],
-        reverse: &[(Port, usize)],
-        f: &mut impl FnMut(&[Port]),
-    ) {
-        if !port_stack.is_empty() {
-            f(port_stack);
+    struct Context<'a, F> {
+        used: &'a mut u64,
+        port_stack: &'a mut Vec<Port>,
+        index_stack: &'a mut Vec<usize>,
+        ports: &'a [Port],
+        forward: &'a [(Port, usize)],
+        reverse: &'a [(Port, usize)],
+        f: F,
+    }
+    fn visit<F: FnMut(&[Port])>(connector: u32, context: &mut Context<F>) {
+        if !context.port_stack.is_empty() {
+            (context.f)(context.port_stack);
         }
-        for source in [forward, reverse] {
+        for source in [context.forward, context.reverse] {
             let start = source.partition_point(|(p, _)| p.0 < connector);
             let end = source[start..].partition_point(|(p, _)| p.0 == connector) + start;
             for &(port, index) in &source[start..end] {
                 let mask = 1 << index;
-                if *used & mask != 0 {
+                if *context.used & mask != 0 {
                     continue;
                 }
-                *used |= mask;
-                port_stack.push(ports[index]);
-                index_stack.push(index);
-                visit(
-                    port.1,
-                    used,
-                    port_stack,
-                    index_stack,
-                    ports,
-                    forward,
-                    reverse,
-                    f,
-                );
-                index_stack.pop();
-                port_stack.pop();
-                *used &= !mask;
+                *context.used |= mask;
+                context.port_stack.push(context.ports[index]);
+                context.index_stack.push(index);
+                visit(port.1, context);
+                context.index_stack.pop();
+                context.port_stack.pop();
+                *context.used &= !mask;
             }
         }
     }
     visit(
         0,
-        &mut used,
-        &mut port_stack,
-        &mut index_stack,
-        ports,
-        forward,
-        reverse,
-        &mut f,
+        &mut Context {
+            used: &mut used,
+            port_stack: &mut port_stack,
+            index_stack: &mut index_stack,
+            ports,
+            forward,
+            reverse,
+            f: &mut f,
+        },
     );
 
     Ok(())

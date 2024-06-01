@@ -28,6 +28,8 @@ impl fmt::Display for ColoredOutput {
 
 auto trait NotIntoColorOutput {}
 impl !NotIntoColorOutput for ColoredOutput {}
+impl<'s> !NotIntoColorOutput for &'s str {}
+impl !NotIntoColorOutput for String {}
 impl !NotIntoColorOutput for AString {}
 impl<'s> !NotIntoColorOutput for &'s AStr {}
 
@@ -37,8 +39,8 @@ impl<T: fmt::Display + NotIntoColorOutput> From<T> for ColoredOutput {
     }
 }
 
-impl From<String> for ColoredOutput {
-    fn from(value: String) -> Self {
+impl<'s> From<&'s str> for ColoredOutput {
+    fn from(value: &'s str) -> Self {
         let before_style_len = value.len();
         let value = value.white().bold().to_string();
         let control_count = value.len() - before_style_len;
@@ -49,15 +51,21 @@ impl From<String> for ColoredOutput {
     }
 }
 
+impl From<String> for ColoredOutput {
+    fn from(value: String) -> Self {
+        <ColoredOutput as From<&str>>::from(value.as_str())
+    }
+}
+
 impl From<AString> for ColoredOutput {
     fn from(s: AString) -> Self {
-        s.as_slice().into()
+        <ColoredOutput as From<&str>>::from(String::from_utf8_lossy(&s).deref())
     }
 }
 
 impl<'s> From<&'s AStr> for ColoredOutput {
     fn from(s: &'s AStr) -> Self {
-        String::from_utf8_lossy(s).deref().into()
+        <ColoredOutput as From<&str>>::from(String::from_utf8_lossy(s).deref())
     }
 }
 

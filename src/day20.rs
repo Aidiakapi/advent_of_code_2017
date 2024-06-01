@@ -4,6 +4,7 @@ use std::{cmp::Ordering, num::NonZeroI32};
 framework::day!(20, parse => pt1, pt2);
 
 fn pt1(particles: &[Particle]) -> Result<usize> {
+    #[allow(clippy::manual_try_fold)]
     particles
         .iter()
         .map(|p| p.acc.x.abs() + p.acc.y.abs() + p.acc.z.abs())

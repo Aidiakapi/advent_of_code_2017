@@ -1,4 +1,3 @@
-#![feature(byte_slice_trim_ascii)]
 #![feature(generic_const_exprs)]
 #![feature(never_type)]
 #![feature(stmt_expr_attributes)]

@@ -33,7 +33,7 @@ fn pt2(input: &[Vec<&[u8]>]) -> usize {
 
 fn parse(input: &[u8]) -> Result<Vec<Vec<&[u8]>>> {
     use parsers::*;
-    let word = take_while((), |_, l| matches!(l, b'a'..=b'z'));
+    let word = take_while((), |_, l| l.is_ascii_lowercase());
     word.sep_by(token(b' ')).sep_by(token(b'\n')).execute(input)
 }
 
